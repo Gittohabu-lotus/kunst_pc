@@ -33,6 +33,12 @@
         /* Verstecke Scrollbar für cleane Optik */
         ::-webkit-scrollbar { width: 0px; background: transparent; }
 
+        /* --- 3D Flip Utilities --- */
+        .perspective-1000 { perspective: 1000px; }
+        .preserve-3d { transform-style: preserve-3d; }
+        .backface-hidden { backface-visibility: hidden; }
+        .rotate-y-180 { transform: rotateY(180deg); }
+
         /* --- Hover State Overrides RAM --- */
         section[data-hovered="pcb"] .pcb-main { fill: #1e293b !important; stroke: #22d3ee !important; filter: drop-shadow(0 0 15px rgba(34,211,238,0.8)); }
         section[data-hovered="pcb"] .pcb-circuits { stroke: #06b6d4 !important; }
@@ -47,11 +53,13 @@
         section[data-hovered="spd"] .spd-main { fill: #0f172a !important; stroke: #34d399 !important; filter: drop-shadow(0 0 15px rgba(52,211,153,0.8)); }
         section[data-hovered="spd"] .spd-dot, section[data-hovered="spd"] .spd-line { fill: #34d399 !important; }
 
-        /* --- Hover State Overrides CPU --- */
+        /* --- Hover State Overrides CPU (Front & Back) --- */
         section[data-hovered="substrate"] .cpu-sub { fill: #1e293b !important; stroke: #fb923c !important; filter: drop-shadow(0 0 15px rgba(251,146,60,0.8)); }
         section[data-hovered="ihs"] .cpu-ihs { fill: #0f172a !important; stroke: #f87171 !important; filter: drop-shadow(0 0 15px rgba(248,113,113,0.8)); }
         section[data-hovered="smd"] .cpu-smd { fill: #fbbf24 !important; stroke: #f59e0b !important; filter: drop-shadow(0 0 10px rgba(251,191,36,0.8)); }
         section[data-hovered="align"] .cpu-align { fill: #facc15 !important; filter: drop-shadow(0 0 15px rgba(250,204,21,0.9)); }
+        section[data-hovered="cpu-pins"] .cpu-pins-grid { color: #facc15 !important; filter: drop-shadow(0 0 20px rgba(250,204,21,0.6)); }
+        section[data-hovered="cpu-back-smd"] .cpu-back-smd-group { fill: #fbbf24 !important; stroke: #f59e0b !important; filter: drop-shadow(0 0 10px rgba(251,191,36,0.8)); }
 
         /* --- Hover State Overrides SSD --- */
         section[data-hovered="ssd-pcb"] .ssd-pcb-main { fill: #0f172a !important; stroke: #38bdf8 !important; filter: drop-shadow(0 0 15px rgba(56,189,248,0.8)); }
@@ -71,6 +79,8 @@
         section[data-hovered="ihs"] .legend-ihs { color: #f87171 !important; }
         section[data-hovered="smd"] .legend-smd { color: #fbbf24 !important; }
         section[data-hovered="align"] .legend-align { color: #facc15 !important; }
+        section[data-hovered="cpu-pins"] .legend-cpu-pins { color: #facc15 !important; }
+        section[data-hovered="cpu-back-smd"] .legend-cpu-back-smd { color: #fbbf24 !important; }
 
         section[data-hovered="ssd-pcb"] .legend-ssd-pcb { color: #38bdf8 !important; }
         section[data-hovered="controller"] .legend-ctrl { color: #818cf8 !important; }
@@ -134,7 +144,8 @@
                 </p>
             </div>
 
-            <div class="relative z-10 w-[85vh] md:w-[85vw] max-w-[800px] md:max-w-[1000px] flex items-center justify-center transform -rotate-90 md:rotate-0 transition-transform duration-1000 ease-in-out">
+            <!-- Angepasste Skalierung: w-[70vh] für besseren Platz auf Mobile -->
+            <div class="relative z-10 w-[70vh] md:w-[75vw] max-w-[800px] md:max-w-[1000px] flex items-center justify-center transform -rotate-90 md:rotate-0 transition-transform duration-1000 ease-in-out">
                 <svg viewBox="0 0 1000 300" class="w-full h-auto drop-shadow-[0_20px_50px_rgba(0,0,0,0.7)]">
                     <defs>
                         <pattern id="pinPatternRAM" width="8" height="20" patternUnits="userSpaceOnUse">
@@ -199,57 +210,115 @@
         <!-- SECTION 2: CPU                             -->
         <!-- ========================================== -->
         <section id="cpu" class="relative h-screen w-full snap-start flex flex-col items-center justify-center hardware-section" data-hovered="">
-            <div class="absolute top-8 left-8 right-8 z-20 text-center md:text-left pointer-events-none">
-                <h1 class="text-3xl md:text-5xl font-bold text-white tracking-[0.2em] uppercase mb-2 drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">
-                    Compute<span class="text-orange-400">_Core</span>
-                </h1>
-                <p class="text-orange-500/70 text-xs md:text-sm animate-pulse tracking-widest">
-                    > ZENTRALES NERVENSYSTEM // BAUTEILE ANVISIEREN_
-                </p>
+            <div class="absolute top-8 left-8 right-8 z-20 text-center md:text-left pointer-events-none flex justify-between items-start">
+                <div>
+                    <h1 class="text-3xl md:text-5xl font-bold text-white tracking-[0.2em] uppercase mb-2 drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">
+                        Compute<span class="text-orange-400">_Core</span>
+                    </h1>
+                    <p class="text-orange-500/70 text-xs md:text-sm animate-pulse tracking-widest">
+                        > ZENTRALES NERVENSYSTEM // BAUTEILE ANVISIEREN_
+                    </p>
+                </div>
             </div>
 
-            <div class="relative z-10 w-[60vh] md:w-[40vw] max-w-[500px] flex items-center justify-center transition-transform duration-1000 ease-in-out">
-                <svg viewBox="0 0 500 500" class="w-full h-auto drop-shadow-[0_20px_50px_rgba(0,0,0,0.7)]">
-                    
-                    <!-- Substrat -->
-                    <g data-part="substrate" class="cursor-pointer group interactable">
-                        <rect x="50" y="50" width="400" height="400" rx="10" class="cpu-sub transition-all duration-500 stroke-[4px] fill-slate-900 stroke-orange-900/40" />
-                        <!-- Kontakt-Pads angedeutet am Rand -->
-                        <g class="fill-orange-900/20">
-                            <rect x="60" y="60" width="10" height="10" /><rect x="80" y="60" width="10" height="10" /><rect x="100" y="60" width="10" height="10" />
-                            <rect x="60" y="430" width="10" height="10" /><rect x="80" y="430" width="10" height="10" /><rect x="100" y="430" width="10" height="10" />
-                            <rect x="60" y="80" width="10" height="10" /><rect x="60" y="100" width="10" height="10" />
-                        </g>
-                    </g>
-                    
-                    <!-- Socket Alignment -->
-                    <g data-part="align" class="cursor-pointer group interactable">
-                        <polygon points="65,435 85,435 65,415" class="cpu-align transition-all duration-500 fill-amber-600/50" />
-                    </g>
-
-                    <!-- Heatspreader (IHS) -->
-                    <g data-part="ihs" class="cursor-pointer group interactable">
-                        <rect x="100" y="100" width="300" height="300" rx="15" class="cpu-ihs transition-all duration-500 stroke-[3px] fill-black stroke-red-900/40" />
-                        <path d="M 120 120 L 380 380 M 380 120 L 120 380" class="stroke-slate-800/30 stroke-1" />
-                        <rect x="150" y="150" width="200" height="200" rx="5" class="fill-slate-900/30" />
-                    </g>
-
-                    <!-- SMD Kondensatoren (im Zentrum angedeutet) -->
-                    <g data-part="smd" class="cursor-pointer group interactable">
-                        <rect x="230" y="230" width="40" height="40" rx="2" class="fill-black stroke-slate-800" />
-                        <g class="cpu-smd transition-all duration-500 stroke-[1px] fill-amber-900/30 stroke-amber-900/50">
-                            <rect x="235" y="235" width="8" height="12" /><rect x="245" y="235" width="8" height="12" /><rect x="255" y="235" width="8" height="12" />
-                            <rect x="235" y="250" width="8" height="12" /><rect x="245" y="250" width="8" height="12" /><rect x="255" y="250" width="8" height="12" />
-                        </g>
-                    </g>
-                </svg>
+            <!-- CPU Flip Button -->
+            <div class="absolute top-28 md:top-8 right-8 z-30">
+                <button onclick="toggleCpuFlip()" id="cpu-flip-btn" class="px-3 py-2 md:px-4 md:py-2 border border-orange-500/50 text-orange-400 text-[10px] md:text-xs tracking-widest hover:bg-orange-500/10 hover:shadow-[0_0_15px_rgba(251,146,60,0.4)] transition-all bg-slate-950/80 backdrop-blur-sm">
+                    [ RÜCKSEITE SCANNEN ]
+                </button>
             </div>
 
-            <div class="absolute bottom-8 left-0 right-0 z-20 flex justify-center gap-4 text-xs md:text-sm text-slate-500 flex-wrap px-4 pointer-events-none">
-                <span data-part="ihs" class="legend-ihs transition-colors duration-300 interactable cursor-pointer pointer-events-auto">[HEATSPREADER]</span>
+            <!-- Skaliert für Mobile (max-h-[45vh]) und Desktop -->
+            <div class="relative z-10 w-[55vh] md:w-[40vw] max-w-[450px] aspect-square flex items-center justify-center perspective-1000 mt-12 md:mt-0">
+                <div id="cpu-flipper" class="w-full h-full relative preserve-3d transition-transform duration-700">
+                    
+                    <!-- VORDERSEITE -->
+                    <div class="absolute inset-0 backface-hidden">
+                        <svg viewBox="0 0 500 500" class="w-full h-full drop-shadow-[0_20px_50px_rgba(0,0,0,0.7)]">
+                            <!-- Substrat -->
+                            <g data-part="substrate" class="cursor-pointer group interactable">
+                                <rect x="50" y="50" width="400" height="400" rx="10" class="cpu-sub transition-all duration-500 stroke-[4px] fill-slate-900 stroke-orange-900/40" />
+                                <g class="fill-orange-900/20">
+                                    <rect x="60" y="60" width="10" height="10" /><rect x="80" y="60" width="10" height="10" /><rect x="100" y="60" width="10" height="10" />
+                                    <rect x="60" y="430" width="10" height="10" /><rect x="80" y="430" width="10" height="10" /><rect x="100" y="430" width="10" height="10" />
+                                    <rect x="60" y="80" width="10" height="10" /><rect x="60" y="100" width="10" height="10" />
+                                </g>
+                            </g>
+                            
+                            <!-- Socket Alignment -->
+                            <g data-part="align" class="cursor-pointer group interactable">
+                                <polygon points="65,435 85,435 65,415" class="cpu-align transition-all duration-500 fill-amber-600/50" />
+                            </g>
+
+                            <!-- Heatspreader (IHS) -->
+                            <g data-part="ihs" class="cursor-pointer group interactable">
+                                <rect x="100" y="100" width="300" height="300" rx="15" class="cpu-ihs transition-all duration-500 stroke-[3px] fill-black stroke-red-900/40" />
+                                <path d="M 120 120 L 380 380 M 380 120 L 120 380" class="stroke-slate-800/30 stroke-1" />
+                                <rect x="150" y="150" width="200" height="200" rx="5" class="fill-slate-900/30" />
+                            </g>
+
+                            <!-- SMD Kondensatoren -->
+                            <g data-part="smd" class="cursor-pointer group interactable">
+                                <rect x="230" y="230" width="40" height="40" rx="2" class="fill-black stroke-slate-800" />
+                                <g class="cpu-smd transition-all duration-500 stroke-[1px] fill-amber-900/30 stroke-amber-900/50">
+                                    <rect x="235" y="235" width="8" height="12" /><rect x="245" y="235" width="8" height="12" /><rect x="255" y="235" width="8" height="12" />
+                                    <rect x="235" y="250" width="8" height="12" /><rect x="245" y="250" width="8" height="12" /><rect x="255" y="250" width="8" height="12" />
+                                </g>
+                            </g>
+                        </svg>
+                    </div>
+
+                    <!-- RÜCKSEITE -->
+                    <div class="absolute inset-0 backface-hidden rotate-y-180">
+                        <svg viewBox="0 0 500 500" class="w-full h-full drop-shadow-[0_20px_50px_rgba(0,0,0,0.7)]">
+                            <defs>
+                                <pattern id="pinPatternCPU" width="10" height="10" patternUnits="userSpaceOnUse">
+                                    <circle cx="5" cy="5" r="3" fill="currentColor" />
+                                </pattern>
+                            </defs>
+                            
+                            <!-- Substrat (Rückseite) -->
+                            <g data-part="substrate" class="cursor-pointer group interactable">
+                                <rect x="50" y="50" width="400" height="400" rx="10" class="cpu-sub transition-all duration-500 stroke-[4px] fill-slate-900 stroke-orange-900/40" />
+                            </g>
+                            
+                            <!-- LGA Pins Area -->
+                            <g data-part="cpu-pins" class="cursor-pointer group interactable">
+                                <!-- Volles Pin-Feld -->
+                                <rect x="70" y="70" width="360" height="360" fill="url(#pinPatternCPU)" class="cpu-pins-grid transition-colors duration-500 text-yellow-600/40" />
+                                <!-- Aussparung in der Mitte blockieren (visuell) -->
+                                <rect x="180" y="180" width="140" height="140" fill="#0f172a" class="stroke-slate-800" />
+                            </g>
+
+                            <!-- Rückseitige Kondensatoren (SMD) -->
+                            <g data-part="cpu-back-smd" class="cursor-pointer group interactable">
+                                <!-- Bereich Mitte -->
+                                <rect x="190" y="190" width="120" height="120" class="fill-black stroke-slate-800/50" />
+                                <g class="cpu-back-smd-group transition-all duration-500 stroke-[1px] fill-amber-900/30 stroke-amber-900/50">
+                                    <!-- Ein paar MLCC Kondensatoren Reihen -->
+                                    <rect x="200" y="200" width="15" height="25" /><rect x="225" y="200" width="15" height="25" /><rect x="250" y="200" width="15" height="25" /><rect x="275" y="200" width="15" height="25" />
+                                    <rect x="200" y="245" width="15" height="25" /><rect x="225" y="245" width="15" height="25" /><rect x="250" y="245" width="15" height="25" /><rect x="275" y="245" width="15" height="25" />
+                                    <rect x="200" y="290" width="15" height="25" /><rect x="225" y="290" width="15" height="25" /><rect x="250" y="290" width="15" height="25" /><rect x="275" y="290" width="15" height="25" />
+                                </g>
+                            </g>
+
+                        </svg>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Legende CPU -->
+            <div class="absolute bottom-8 left-0 right-0 z-20 flex justify-center gap-4 text-[10px] md:text-sm text-slate-500 flex-wrap px-4 pointer-events-none">
+                <!-- VORDERSEITE ITEMS -->
+                <span data-part="ihs" class="legend-ihs cpu-front-only transition-colors duration-300 interactable cursor-pointer pointer-events-auto">[HEATSPREADER]</span>
                 <span data-part="substrate" class="legend-sub transition-colors duration-300 interactable cursor-pointer pointer-events-auto">[SUBSTRAT]</span>
-                <span data-part="smd" class="legend-smd transition-colors duration-300 interactable cursor-pointer pointer-events-auto">[KONDENSATOREN]</span>
-                <span data-part="align" class="legend-align transition-colors duration-300 interactable cursor-pointer pointer-events-auto">[MARKIERUNG]</span>
+                <span data-part="smd" class="legend-smd cpu-front-only transition-colors duration-300 interactable cursor-pointer pointer-events-auto">[KONDENSATOREN]</span>
+                <span data-part="align" class="legend-align cpu-front-only transition-colors duration-300 interactable cursor-pointer pointer-events-auto">[MARKIERUNG]</span>
+                
+                <!-- RÜCKSEITE ITEMS (Initial versteckt) -->
+                <span data-part="cpu-pins" class="legend-cpu-pins cpu-back-only hidden transition-colors duration-300 interactable cursor-pointer pointer-events-auto">[LGA-KONTAKTFELD]</span>
+                <span data-part="cpu-back-smd" class="legend-cpu-back-smd cpu-back-only hidden transition-colors duration-300 interactable cursor-pointer pointer-events-auto">[MLCC KONDENSATOREN]</span>
             </div>
         </section>
 
@@ -266,7 +335,8 @@
                 </p>
             </div>
 
-            <div class="relative z-10 w-[85vh] md:w-[85vw] max-w-[800px] md:max-w-[1000px] flex items-center justify-center transform -rotate-90 md:rotate-0 transition-transform duration-1000 ease-in-out">
+            <!-- Angepasste Skalierung: w-[70vh] -->
+            <div class="relative z-10 w-[70vh] md:w-[75vw] max-w-[800px] md:max-w-[1000px] flex items-center justify-center transform -rotate-90 md:rotate-0 transition-transform duration-1000 ease-in-out">
                 <svg viewBox="0 0 1000 300" class="w-full h-auto drop-shadow-[0_20px_50px_rgba(0,0,0,0.7)]">
                     <defs>
                         <pattern id="pinPatternSSD" width="8" height="20" patternUnits="userSpaceOnUse">
@@ -337,7 +407,7 @@
     <!-- Erklärungs-Popup (Global für alle) -->
     <div id="popup-overlay" class="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-8 bg-black/60 backdrop-blur-md transition-opacity duration-300 hidden">
         <div class="absolute inset-0 cursor-crosshair" onclick="closePopup()"></div>
-        <div id="popup-content" class="animate-popup relative w-full max-w-2xl bg-slate-950/95 border-l-4 p-8 md:p-12 border-slate-500 shadow-none">
+        <div id="popup-content" class="animate-popup relative w-full max-w-2xl bg-slate-950/95 border-l-4 p-8 md:p-12 border-slate-500 shadow-none max-h-[90vh] overflow-y-auto">
             <button onclick="closePopup()" class="absolute top-6 right-6 text-slate-500 hover:text-white transition-colors duration-200">
                 <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
             </button>
@@ -345,9 +415,9 @@
                 <span>MEM_ADDR: <span id="data-readout" class="text-white/70">0x0000</span></span>
                 <span class="text-emerald-500 animate-pulse">ACTIVE</span>
             </div>
-            <h2 id="popup-title" class="text-3xl md:text-5xl font-bold mb-2 uppercase tracking-widest text-white">Title</h2>
-            <h3 id="popup-subtitle" class="text-white/50 text-sm md:text-lg tracking-wider mb-8 uppercase">// Subtitle</h3>
-            <p id="popup-desc" class="text-slate-300 text-base md:text-lg leading-relaxed font-sans font-light">Description</p>
+            <h2 id="popup-title" class="text-3xl md:text-4xl lg:text-5xl font-bold mb-2 uppercase tracking-widest text-white">Title</h2>
+            <h3 id="popup-subtitle" class="text-white/50 text-xs md:text-sm lg:text-lg tracking-wider mb-8 uppercase">// Subtitle</h3>
+            <p id="popup-desc" class="text-slate-300 text-sm md:text-base lg:text-lg leading-relaxed font-sans font-light">Description</p>
             <div class="absolute bottom-0 right-0 p-4 opacity-20 pointer-events-none">
                 <svg width="40" height="40" viewBox="0 0 40 40" id="popup-deco" class="fill-none stroke-2 stroke-white">
                     <path d="M 0 40 L 40 0 M 20 40 L 40 20 M 0 20 L 20 0" />
@@ -398,7 +468,7 @@
                 color: "text-orange-400", border: "border-orange-500", shadow: "shadow-[0_0_30px_rgba(251,146,60,0.3)]"
             },
             smd: {
-                title: "Kondensatoren", subtitle: "Filter des Rauschens",
+                title: "Kondensatoren (Front)", subtitle: "Filter des Rauschens",
                 description: "Tausende dieser mikroskopischen Bauteile glätten die elektrische Spannung. Ohne sie würde der Kern im Chaos winziger Stromschwankungen kollabieren.",
                 color: "text-amber-400", border: "border-amber-500", shadow: "shadow-[0_0_30px_rgba(251,191,36,0.3)]"
             },
@@ -406,6 +476,16 @@
                 title: "Sockel-Markierung", subtitle: "Der goldene Kompass",
                 description: "Ein unscheinbares goldenes Dreieck, das eine Katastrophe verhindert. Es ist das einzige visuelle Signal, wie das Herz der Maschine in seinen Sockel gebettet werden muss.",
                 color: "text-yellow-400", border: "border-yellow-500", shadow: "shadow-[0_0_30px_rgba(234,179,8,0.3)]"
+            },
+            "cpu-pins": {
+                title: "LGA-Kontaktfeld", subtitle: "Die goldene Matrix",
+                description: "Tausende mikroskopisch feiner Goldkontakte verbinden den Prozessor mit dem Mainboard. Jeder einzelne Pin ist essentiell für die komplexe Stromversorgung und Hochgeschwindigkeits-Datenübertragung.",
+                color: "text-yellow-400", border: "border-yellow-500", shadow: "shadow-[0_0_30px_rgba(234,179,8,0.3)]"
+            },
+            "cpu-back-smd": {
+                title: "MLCC Kondensatoren", subtitle: "Tiefe Spannungsglättung",
+                description: "Direkt unterhalb des Rechenkerns platziert, filtern diese Keramikkondensatoren hochfrequente Störungen exakt dort heraus, wo der Strom am reinsten sein muss.",
+                color: "text-amber-400", border: "border-amber-500", shadow: "shadow-[0_0_30px_rgba(251,191,36,0.3)]"
             },
 
             // --- SSD ---
@@ -445,11 +525,37 @@
         const popupDeco = document.getElementById('popup-deco');
 
         let dataInterval = null;
+        let isCpuFlipped = false;
 
         function setHoverState(sectionEl, partId) {
             if(sectionEl) {
                 sectionEl.setAttribute('data-hovered', partId || '');
             }
+        }
+
+        function toggleCpuFlip() {
+            isCpuFlipped = !isCpuFlipped;
+            const flipper = document.getElementById('cpu-flipper');
+            const btn = document.getElementById('cpu-flip-btn');
+            
+            // Flip Animation triggern
+            if(isCpuFlipped) {
+                flipper.classList.add('rotate-y-180');
+                btn.innerText = "[ VORDERSEITE SCANNEN ]";
+            } else {
+                flipper.classList.remove('rotate-y-180');
+                btn.innerText = "[ RÜCKSEITE SCANNEN ]";
+            }
+
+            // Legende anpassen (Vorder- und Rückseiten-Items verstecken/zeigen)
+            document.querySelectorAll('.cpu-front-only').forEach(el => {
+                if(isCpuFlipped) el.classList.add('hidden');
+                else el.classList.remove('hidden');
+            });
+            document.querySelectorAll('.cpu-back-only').forEach(el => {
+                if(isCpuFlipped) el.classList.remove('hidden');
+                else el.classList.add('hidden');
+            });
         }
 
         function openPopup(partId) {
@@ -460,10 +566,10 @@
             document.getElementById('app-wrapper').style.overflowY = 'hidden';
 
             popupTitle.innerText = part.title;
-            popupTitle.className = `text-3xl md:text-5xl font-bold mb-2 uppercase tracking-widest ${part.color}`;
+            popupTitle.className = `text-3xl md:text-4xl lg:text-5xl font-bold mb-2 uppercase tracking-widest ${part.color}`;
             popupSubtitle.innerText = `// ${part.subtitle}`;
             popupDesc.innerText = part.description;
-            popupContent.className = `animate-popup relative w-full max-w-2xl bg-slate-950/95 border-l-4 p-8 md:p-12 ${part.border} ${part.shadow}`;
+            popupContent.className = `animate-popup relative w-full max-w-2xl bg-slate-950/95 border-l-4 p-8 md:p-12 ${part.border} ${part.shadow} max-h-[90vh] overflow-y-auto`;
             popupDeco.className = `fill-none stroke-2 ${part.color.replace('text-', 'stroke-')}`;
 
             popupOverlay.classList.remove('hidden');
