@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RAM Art Project</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* --- Custom Animations --- */
+        @keyframes scanline {
+            0% { transform: translateY(-100vh); }
+            100% { transform: translateY(100vh); }
+        }
+        .scanline-effect {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 15vh;
+            background: linear-gradient(to bottom, transparent, rgba(34, 211, 238, 0.05), transparent);
+            animation: scanline 6s linear infinite;
+            pointer-events: none;
+            z-index: 10;
+        }
+        @keyframes popup-enter {
+            0% { opacity: 0; transform: scale(0.95) translateY(10px); filter: blur(10px); }
+            100% { opacity: 1; transform: scale(1) translateY(0); filter: blur(0); }
+        }
+        .animate-popup {
+            animation: popup-enter 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        /* --- Hover State Overrides --- */
+        /* PCB Hover */
+        #ram-svg[data-hovered="pcb"] .pcb-main {
+            fill: #1e293b !important; /* slate-800 */
+            stroke: #22d3ee !important; /* cyan-400 */
+            filter: drop-shadow(0 0 15px rgba(34,211,238,0.8));
+        }
+        #ram-svg[data-hovered="pcb"] .pcb-circuits {
+            stroke: #06b6d4 !important; /* cyan-500 */
+        }
+
+        /* Pins Hover */
+        #ram-svg[data-hovered="pins"] .pins-rect {
+            color: #facc15 !important; /* yellow-400 */
+            filter: drop-shadow(0 0 15px rgba(250,204,21,0.8));
+        }
+        #ram-svg[data-hovered="pins"] .pins-hl {
+            fill: #fde047 !important; /* yellow-300 */
+        }
+
+        /* Notch Hover */
+        #ram-svg[data-hovered="notch"] .notch-path {
+            stroke: #f472b6 !important; /* pink-400 */
+            filter: drop-shadow(0 0 15px rgba(244,114,182,0.8));
+        }
+        #ram-svg[data-hovered="notch"] .notch-ping {
+            fill: #f472b6 !important;
+            animation: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite;
+        }
+        #ram-svg[data-hovered="notch"] .notch-center {
+            fill: #f472b6 !important;
+        }
+
+        /* Chips Hover */
+        #ram-svg[data-hovered="chips"] .chip-main {
+            fill: #0f172a !important; /* slate-900 */
+            stroke: #c084fc !important; /* purple-400 */
+            filter: drop-shadow(0 0 15px rgba(168,85,247,0.8));
+        }
+        #ram-svg[data-hovered="chips"] .chip-inner {
+            fill: rgba(88, 28, 135, 0.4) !important; /* purple-900/40 */
+        }
+        #ram-svg[data-hovered="chips"] .chip-dot {
+            fill: #c084fc !important; /* purple-400 */
+        }
+
+        /* SPD Hover */
+        #ram-svg[data-hovered="spd"] .spd-main {
+            fill: #0f172a !important; /* slate-900 */
+            stroke: #34d399 !important; /* emerald-400 */
+            filter: drop-shadow(0 0 15px rgba(52,211,153,0.8));
+        }
+        #ram-svg[data-hovered="spd"] .spd-dot,
+        #ram-svg[data-hovered="spd"] .spd-line {
+            fill: #34d399 !important; /* emerald-400 */
+        }
+
+        /* Legend Hover */
+        #app-wrapper[data-hovered="pcb"] .legend-pcb { color: #22d3ee !important; }
+        #app-wrapper[data-hovered="pins"] .legend-pins { color: #facc15 !important; }
+        #app-wrapper[data-hovered="notch"] .legend-notch { color: #f472b6 !important; }
+        #app-wrapper[data-hovered="chips"] .legend-chips { color: #c084fc !important; }
+        #app-wrapper[data-hovered="spd"] .legend-spd { color: #34d399 !important; }
+    </style>
+</head>
+<body class="bg-slate-950 m-0 p-0 overflow-x-hidden">
+
+    <!-- Tailwind Safelist für dynamische Popup-Klassen -->
+    <div class="hidden text-purple-400 border-purple-500 shadow-[0_0_30px_rgba(168,85,247,0.3)] stroke-purple-400
+                text-yellow-400 border-yellow-500 shadow-[0_0_30px_rgba(234,179,8,0.3)] stroke-yellow-400
+                text-cyan-400 border-cyan-500 shadow-[0_0_30px_rgba(6,182,212,0.3)] stroke-cyan-400
+                text-pink-400 border-pink-500 shadow-[0_0_30px_rgba(236,72,153,0.3)] stroke-pink-400
+                text-emerald-400 border-emerald-500 shadow-[0_0_30px_rgba(16,185,129,0.3)] stroke-emerald-400">
+    </div>
+
+    <div id="app-wrapper" class="min-h-screen w-full relative flex flex-col items-center justify-center font-mono select-none" data-hovered="">
+        
+        <!-- Hintergrund Kunst-Effekte -->
+        <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-slate-900 via-slate-950 to-black opacity-90 z-0"></div>
+        <div class="absolute inset-0 z-0 opacity-20" style="background-image: linear-gradient(rgba(34, 211, 238, 0.15) 1px, transparent 1px), linear-gradient(90deg, rgba(34, 211, 238, 0.15) 1px, transparent 1px); background-size: 40px 40px; background-position: center center;"></div>
+        <div class="scanline-effect"></div>
+
+        <!-- Header / Titel -->
+        <div class="absolute top-8 left-8 right-8 z-20 text-center md:text-left pointer-events-none">
+            <h1 class="text-3xl md:text-5xl font-bold text-white tracking-[0.2em] uppercase mb-2 drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">
+                Memory<span class="text-cyan-400">_Core</span>
+            </h1>
+            <p class="text-cyan-500/70 text-xs md:text-sm animate-pulse tracking-widest">
+                > INTERAKTION ERFORDERLICH: BAUTEILE ANVISIEREN UND DEKODIEREN_
+            </p>
+        </div>
+
+        <!-- Responsive SVG Container -->
+        <div class="relative z-10 w-[85vh] md:w-[85vw] max-w-[800px] md:max-w-[1000px] flex items-center justify-center transform -rotate-90 md:rotate-0 transition-transform duration-1000 ease-in-out">
+            <svg id="ram-svg" viewBox="0 0 1000 300" class="w-full h-auto drop-shadow-[0_20px_50px_rgba(0,0,0,0.7)]" data-hovered="">
+                <defs>
+                    <pattern id="pinPattern" width="8" height="20" patternUnits="userSpaceOnUse">
+                        <rect x="0" y="0" width="5" height="20" fill="currentColor" />
+                    </pattern>
+                </defs>
+
+                <!-- 1. PCB (Leiterplatte) -->
+                <g data-part="pcb" class="cursor-pointer group interactable">
+                    <path d="M 20 20 H 980 V 260 H 520 A 10 15 0 0 1 500 260 H 20 Z" class="pcb-main transition-all duration-500 stroke-[4px] fill-slate-900 stroke-cyan-900/60" stroke-linejoin="round" />
+                    <g class="pcb-circuits fill-none transition-all duration-500 stroke-2 stroke-cyan-900/30">
+                        <path d="M 110 180 V 210 H 90" />
+                        <path d="M 210 180 V 200 H 230" />
+                        <path d="M 310 180 V 220 H 290" />
+                        <path d="M 610 180 V 210 H 630" />
+                        <path d="M 710 180 V 200 H 690" />
+                        <path d="M 810 180 V 220 H 830" />
+                        <path d="M 50 100 H 80 V 150" />
+                        <path d="M 950 100 H 920 V 150" />
+                    </g>
+                </g>
+
+                <!-- 2. Pins (Goldkontakte) -->
+                <g data-part="pins" class="cursor-pointer group interactable">
+                    <rect x="25" y="240" width="470" height="20" fill="url(#pinPattern)" class="pins-rect transition-colors duration-500 text-yellow-600/60" />
+                    <rect x="525" y="240" width="450" height="20" fill="url(#pinPattern)" class="pins-rect transition-colors duration-500 text-yellow-600/60" />
+                    <rect x="25" y="238" width="470" height="2" class="pins-hl transition-all duration-500 fill-transparent" />
+                    <rect x="525" y="238" width="450" height="2" class="pins-hl transition-all duration-500 fill-transparent" />
+                </g>
+
+                <!-- 3. Notch (Kerbe) -->
+                <g data-part="notch" class="cursor-pointer group interactable">
+                    <rect x="480" y="220" width="60" height="60" fill="transparent" />
+                    <path d="M 495 265 V 230 H 525 V 265" class="notch-path fill-none transition-all duration-500 stroke-[4px] stroke-pink-900/30" />
+                    <circle cx="510" cy="245" r="4" class="notch-ping transition-all duration-500 fill-pink-900/20" />
+                    <circle cx="510" cy="245" r="4" class="notch-center transition-all duration-500 fill-transparent" />
+                </g>
+
+                <!-- 4. Speicherchips (DRAM) -->
+                <g data-part="chips" class="cursor-pointer group interactable">
+                    <!-- Statisch generierte Chips basierend auf React-Array [70, 170, 270, 370, 560, 660, 760, 860] -->
+                    <!-- Chip 1 -->
+                    <g class="transition-all duration-500">
+                        <rect x="70" y="60" width="80" height="110" rx="3" class="chip-main transition-all duration-500 stroke-[3px] fill-black stroke-purple-900/30" />
+                        <rect x="90" y="75" width="40" height="80" rx="1" class="chip-inner transition-all duration-500 fill-slate-900/50" />
+                        <circle cx="85" cy="70" r="3" class="chip-dot transition-all duration-500 fill-purple-900/20" />
+                    </g>
+                    <!-- Chip 2 -->
+                    <g class="transition-all duration-500">
+                        <rect x="170" y="60" width="80" height="110" rx="3" class="chip-main transition-all duration-500 stroke-[3px] fill-black stroke-purple-900/30" />
+                        <rect x="190" y="75" width="40" height="80" rx="1" class="chip-inner transition-all duration-500 fill-slate-900/50" />
+                        <circle cx="185" cy="70" r="3" class="chip-dot transition-all duration-500 fill-purple-900/20" />
+                    </g>
+                    <!-- Chip 3 -->
+                    <g class="transition-all duration-500">
+                        <rect x="270" y="60" width="80" height="110" rx="3" class="chip-main transition-all duration-500 stroke-[3px] fill-black stroke-purple-900/30" />
+                        <rect x="290" y="75" width="40" height="80" rx="1" class="chip-inner transition-all duration-500 fill-slate-900/50" />
+                        <circle cx="285" cy="70" r="3" class="chip-dot transition-all duration-500 fill-purple-900/20" />
+                    </g>
+                    <!-- Chip 4 -->
+                    <g class="transition-all duration-500">
+                        <rect x="370" y="60" width="80" height="110" rx="3" class="chip-main transition-all duration-500 stroke-[3px] fill-black stroke-purple-900/30" />
+                        <rect x="390" y="75" width="40" height="80" rx="1" class="chip-inner transition-all duration-500 fill-slate-900/50" />
+                        <circle cx="385" cy="70" r="3" class="chip-dot transition-all duration-500 fill-purple-900/20" />
+                    </g>
+                    <!-- Chip 5 -->
+                    <g class="transition-all duration-500">
+                        <rect x="560" y="60" width="80" height="110" rx="3" class="chip-main transition-all duration-500 stroke-[3px] fill-black stroke-purple-900/30" />
+                        <rect x="580" y="75" width="40" height="80" rx="1" class="chip-inner transition-all duration-500 fill-slate-900/50" />
+                        <circle cx="575" cy="70" r="3" class="chip-dot transition-all duration-500 fill-purple-900/20" />
+                    </g>
+                    <!-- Chip 6 -->
+                    <g class="transition-all duration-500">
+                        <rect x="660" y="60" width="80" height="110" rx="3" class="chip-main transition-all duration-500 stroke-[3px] fill-black stroke-purple-900/30" />
+                        <rect x="680" y="75" width="40" height="80" rx="1" class="chip-inner transition-all duration-500 fill-slate-900/50" />
+                        <circle cx="675" cy="70" r="3" class="chip-dot transition-all duration-500 fill-purple-900/20" />
+                    </g>
+                    <!-- Chip 7 -->
+                    <g class="transition-all duration-500">
+                        <rect x="760" y="60" width="80" height="110" rx="3" class="chip-main transition-all duration-500 stroke-[3px] fill-black stroke-purple-900/30" />
+                        <rect x="780" y="75" width="40" height="80" rx="1" class="chip-inner transition-all duration-500 fill-slate-900/50" />
+                        <circle cx="775" cy="70" r="3" class="chip-dot transition-all duration-500 fill-purple-900/20" />
+                    </g>
+                    <!-- Chip 8 -->
+                    <g class="transition-all duration-500">
+                        <rect x="860" y="60" width="80" height="110" rx="3" class="chip-main transition-all duration-500 stroke-[3px] fill-black stroke-purple-900/30" />
+                        <rect x="880" y="75" width="40" height="80" rx="1" class="chip-inner transition-all duration-500 fill-slate-900/50" />
+                        <circle cx="875" cy="70" r="3" class="chip-dot transition-all duration-500 fill-purple-900/20" />
+                    </g>
+                </g>
+
+                <!-- 5. SPD-EEPROM Chip -->
+                <g data-part="spd" class="cursor-pointer group interactable">
+                    <rect x="485" y="100" width="30" height="40" rx="2" class="spd-main transition-all duration-500 stroke-[2px] fill-black stroke-emerald-900/30" />
+                    <circle cx="490" cy="105" r="1.5" class="spd-dot transition-all duration-500 fill-emerald-900/30" />
+                    <rect x="492" y="115" width="16" height="3" class="spd-line transition-all duration-500 fill-emerald-900/20" />
+                    <rect x="492" y="125" width="10" height="3" class="spd-line transition-all duration-500 fill-emerald-900/20" />
+                </g>
+            </svg>
+        </div>
+
+        <!-- Legende / Orientierung unten -->
+        <div class="absolute bottom-8 left-0 right-0 z-20 flex justify-center gap-4 text-xs md:text-sm text-slate-500 flex-wrap px-4 pointer-events-none">
+            <span data-part="chips" class="legend-chips transition-colors duration-300 interactable cursor-pointer pointer-events-auto">[DRAM-SPEICHERCHIPS]</span>
+            <span data-part="pins" class="legend-pins transition-colors duration-300 interactable cursor-pointer pointer-events-auto">[GOLDKONTAKTE]</span>
+            <span data-part="pcb" class="legend-pcb transition-colors duration-300 interactable cursor-pointer pointer-events-auto">[LEITERPLATTE (PCB)]</span>
+            <span data-part="notch" class="legend-notch transition-colors duration-300 interactable cursor-pointer pointer-events-auto">[KEYING NOTCH]</span>
+            <span data-part="spd" class="legend-spd transition-colors duration-300 interactable cursor-pointer pointer-events-auto">[SPD-EEPROM]</span>
+        </div>
+
+    </div>
+
+    <!-- Erklärungs-Popup -->
+    <div id="popup-overlay" class="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-8 bg-black/60 backdrop-blur-md transition-opacity duration-300 hidden">
+        
+        <!-- Klickbarer Hintergrund zum Schließen -->
+        <div class="absolute inset-0 cursor-crosshair" onclick="closePopup()"></div>
+        
+        <div id="popup-content" class="animate-popup relative w-full max-w-2xl bg-slate-950/95 border-l-4 p-8 md:p-12 border-slate-500 shadow-none">
+            
+            <button onclick="closePopup()" class="absolute top-6 right-6 text-slate-500 hover:text-white transition-colors duration-200">
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+            </button>
+
+            <!-- Data Readout -->
+            <div class="text-xs text-slate-500 font-mono mb-6 tracking-widest border-b border-slate-800 pb-2">
+                MEM_ADDR: <span id="data-readout" class="text-white/70">0x0000</span> // STATUS: <span class="text-emerald-500 animate-pulse">ACTIVE</span>
+            </div>
+
+            <h2 id="popup-title" class="text-3xl md:text-5xl font-bold mb-2 uppercase tracking-widest text-white">
+                Title
+            </h2>
+            <h3 id="popup-subtitle" class="text-white/50 text-sm md:text-lg tracking-wider mb-8 uppercase">
+                // Subtitle
+            </h3>
+            
+            <p id="popup-desc" class="text-slate-300 text-base md:text-lg leading-relaxed font-sans font-light">
+                Description
+            </p>
+
+            <!-- Deko Elemente im Popup -->
+            <div class="absolute bottom-0 right-0 p-4 opacity-20">
+                <svg width="40" height="40" viewBox="0 0 40 40" id="popup-deco" class="fill-none stroke-2 stroke-white">
+                    <path d="M 0 40 L 40 0 M 20 40 L 40 20 M 0 20 L 20 0" />
+                </svg>
+            </div>
+            
+        </div>
+    </div>
+
+    <!-- Javascript-Logik -->
+    <script>
+        const ramParts = {
+            chips: {
+                id: 'chips',
+                title: "DRAM-Speicherchips",
+                subtitle: "Die flüchtige Architektur des Gedächtnisses",
+                description: "Millionen von winzigen Kondensatoren speichern hier die Nullen und Einsen der Gegenwart. Ein hochaktives, pulsierendes Netz aus Silizium, das extrem schnell arbeitet, aber jeden Gedanken vergisst, sobald der Strom erlischt.",
+                color: "text-purple-400",
+                border: "border-purple-500",
+                shadow: "shadow-[0_0_30px_rgba(168,85,247,0.3)]"
+            },
+            pins: {
+                id: 'pins',
+                title: "Goldkontakte",
+                subtitle: "Die vergoldete Schwelle",
+                description: "Eine physische Schnittstelle von mikroskopischer Präzision, über die Datenströme mit der Geschwindigkeit eines Wimpernschlags rasen. Das Gold verhindert Korrosion und garantiert den makellosen elektrischen Kontakt zur Hauptplatine.",
+                color: "text-yellow-400",
+                border: "border-yellow-500",
+                shadow: "shadow-[0_0_30px_rgba(234,179,8,0.3)]"
+            },
+            pcb: {
+                id: 'pcb',
+                title: "Leiterplatte (PCB)",
+                subtitle: "Das kybernetische Fundament",
+                description: "Mehrere Schichten aus gewebtem Fiberglas bergen ein Labyrinth aus feinsten Kupferbahnen. Es ist das Nervensystem, das alle Komponenten elektrisch verschaltet, synchronisiert und physisch verankert.",
+                color: "text-cyan-400",
+                border: "border-cyan-500",
+                shadow: "shadow-[0_0_30px_rgba(6,182,212,0.3)]"
+            },
+            notch: {
+                id: 'notch',
+                title: "Keying Notch",
+                subtitle: "Der asymmetrische Schlüssel",
+                description: "Eine rein mechanische Sicherheitsarchitektur. Diese minimalistische Aussparung stellt sicher, dass jede Speicher-Generation (DDR4, DDR5) nur in ihr vorgesehenes Ökosystem passt. Ein simpler Schnitt gegen das Chaos.",
+                color: "text-pink-400",
+                border: "border-pink-500",
+                shadow: "shadow-[0_0_30px_rgba(236,72,153,0.3)]"
+            },
+            spd: {
+                id: 'spd',
+                title: "SPD-EEPROM",
+                subtitle: "Der genetische Code",
+                description: "Ein isolierter Speicherbaustein, der das unveränderliche Profil des Riegels trägt. Er flüstert dem System beim Erwachen zu, wer er ist, wie schnell er taktet und welche Rhythmen und Latenzen er perfekt beherrscht.",
+                color: "text-emerald-400",
+                border: "border-emerald-500",
+                shadow: "shadow-[0_0_30px_rgba(16,185,129,0.3)]"
+            }
+        };
+
+        const appWrapper = document.getElementById('app-wrapper');
+        const ramSvg = document.getElementById('ram-svg');
+        const popupOverlay = document.getElementById('popup-overlay');
+        const popupContent = document.getElementById('popup-content');
+        const popupTitle = document.getElementById('popup-title');
+        const popupSubtitle = document.getElementById('popup-subtitle');
+        const popupDesc = document.getElementById('popup-desc');
+        const dataReadoutSpan = document.getElementById('data-readout');
+        const popupDeco = document.getElementById('popup-deco');
+
+        let dataInterval = null;
+
+        function setHoverState(partId) {
+            appWrapper.setAttribute('data-hovered', partId || '');
+            ramSvg.setAttribute('data-hovered', partId || '');
+        }
+
+        function openPopup(partId) {
+            const part = ramParts[partId];
+            if (!part) return;
+
+            // Scrollen blockieren
+            document.body.style.overflow = 'hidden';
+
+            // Inhalte setzen
+            popupTitle.innerText = part.title;
+            popupTitle.className = `text-3xl md:text-5xl font-bold mb-2 uppercase tracking-widest ${part.color}`;
+            
+            popupSubtitle.innerText = `// ${part.subtitle}`;
+            popupDesc.innerText = part.description;
+
+            // Container Styling anpassen
+            popupContent.className = `animate-popup relative w-full max-w-2xl bg-slate-950/95 border-l-4 p-8 md:p-12 ${part.border} ${part.shadow}`;
+            
+            // Deko-Element anpassen
+            popupDeco.className = `fill-none stroke-2 ${part.color.replace('text-', 'stroke-')}`;
+
+            // Overlay anzeigen
+            popupOverlay.classList.remove('hidden');
+
+            // Data Readout Animation starten
+            clearInterval(dataInterval);
+            dataInterval = setInterval(() => {
+                dataReadoutSpan.innerText = "0x" + Math.floor(Math.random()*16777215).toString(16).toUpperCase().padStart(4, '0');
+            }, 150);
+        }
+
+        function closePopup() {
+            document.body.style.overflow = 'auto';
+            popupOverlay.classList.add('hidden');
+            clearInterval(dataInterval);
+        }
+
+        // Event-Listener an alle interaktiven Elemente anhängen
+        document.querySelectorAll('.interactable').forEach(el => {
+            const partId = el.getAttribute('data-part');
+            
+            el.addEventListener('mouseenter', () => setHoverState(partId));
+            el.addEventListener('mouseleave', () => setHoverState(null));
+            el.addEventListener('click', () => openPopup(partId));
+        });
+
+    </script>
+</body>
+</html>
